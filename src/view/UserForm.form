@@ -354,7 +354,7 @@
                       <Component id="saveButton" max="32767" attributes="0"/>
                       <Component id="UpdateButton" max="32767" attributes="0"/>
                       <Component id="ResetButton" alignment="0" max="32767" attributes="0"/>
-                      <Component id="resetButton" alignment="0" max="32767" attributes="0"/>
+                      <Component id="deleteButton" alignment="0" max="32767" attributes="0"/>
                       <Component id="importExcelButton" alignment="0" pref="137" max="32767" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
@@ -370,7 +370,7 @@
                   <EmptySpace max="-2" attributes="0"/>
                   <Component id="ResetButton" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="resetButton" min="-2" max="-2" attributes="0"/>
+                  <Component id="deleteButton" min="-2" max="-2" attributes="0"/>
                   <EmptySpace pref="9" max="32767" attributes="0"/>
                   <Component id="importExcelButton" min="-2" max="-2" attributes="0"/>
               </Group>
@@ -390,21 +390,33 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="UPDATE"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="UpdateButtonActionPerformed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JButton" name="ResetButton">
           <Properties>
             <Property name="text" type="java.lang.String" value="RESET"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ResetButtonActionPerformed"/>
+          </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="resetButton">
+        <Component class="javax.swing.JButton" name="deleteButton">
           <Properties>
-            <Property name="text" type="java.lang.String" value="RESET"/>
+            <Property name="text" type="java.lang.String" value="DELETE"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="deleteButtonActionPerformed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JButton" name="importExcelButton">
           <Properties>
             <Property name="text" type="java.lang.String" value="IMPORT EXCEL"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="importExcelButtonActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
