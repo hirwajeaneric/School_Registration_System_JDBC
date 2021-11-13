@@ -9,6 +9,7 @@ import javax.swing.JOptionPane;
 import model.RegistrantType;
 import model.Users;
 import java.sql.*;
+import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
@@ -223,6 +224,11 @@ public class UserForm extends javax.swing.JInternalFrame {
                 "First name", "Last name", "Phone", "Date of birth", "Registrant type", "Image"
             }
         ));
+        userTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                userTableMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(userTable);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -406,13 +412,11 @@ public class UserForm extends javax.swing.JInternalFrame {
     
     //Method to display images.
     public void displayImage(){
-        /*
-        ImageIcon image = new ImageIcon(photo);
+        ImageIcon image = new ImageIcon(ImagePhotoFileFromDatabase);
         Image im = image.getImage();
         Image myImg = im.getScaledInstance(imageLabel.getWidth(), imageLabel.getHeight(), Image.SCALE_SMOOTH);
         ImageIcon newImage = new ImageIcon(myImg);
         imageLabel.setIcon(newImage);
-        */  
     }
     
     //What happens when we click on the save button.
@@ -473,6 +477,35 @@ public class UserForm extends javax.swing.JInternalFrame {
     private void importExcelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importExcelButtonActionPerformed
         
     }//GEN-LAST:event_importExcelButtonActionPerformed
+
+    byte[] ImagePhotoFileFromDatabase;
+    //What happens when we click on a table row
+    private void userTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_userTableMouseClicked
+        try {
+            DefaultTableModel model = (DefaultTableModel) userTable.getModel();
+            int selectedRow = userTable.getSelectedRow();
+            
+            fnameTxtField.setText(model.getValueAt(selectedRow, 0).toString());
+            lastNameTextField.setText(model.getValueAt(selectedRow, 1).toString());
+            PhoneNumberTextField.setText(model.getValueAt(selectedRow, 2).toString());
+            java.util.Date date = new SimpleDateFormat("yyyy-MM-dd").parse((String)model.getValueAt(selectedRow, 3).toString());
+            dateOfBirthDateChooser.setDate(date);
+            //if()
+                RegistrantTypeComboBox.setSelectedItem(model.getValueAt(selectedRow, 4).toString());            
+            //else if()
+            //    RegistrantTypeComboBox.setSelectedItem(model.getValueAt(selectedRow, 4).toString());
+            //else if()
+            //    RegistrantTypeComboBox.setSelectedItem(model.getValueAt(selectedRow, 4).toString());    
+            imagePathTextField.setText(model.getValueAt(selectedRow, 5).toString());
+            
+            ImagePhotoFileFromDatabase = (byte[]) model.getValueAt(selectedRow, 5);
+            
+            displayImage();
+            
+        } catch (ParseException ex) {
+            Logger.getLogger(UserForm.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_userTableMouseClicked
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
