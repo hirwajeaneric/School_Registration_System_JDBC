@@ -2,7 +2,11 @@ package view;
 
 import controller.UserDao;
 import java.awt.Image;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -21,7 +25,15 @@ import utils.ConnectionToDatabase;
  * @author hirwa
  */
 public class UserForm extends javax.swing.JInternalFrame {
-    
+
+    //Variables to be used when dealing with selection of the image.
+    byte[] person_image;
+    FileInputStream fileinputstream;
+    String thePathOfTheImage;
+    File theimage, selectedImage;    
+    byte[] ImagePhotoFileFromDatabase;
+    DefaultTableModel model;
+
     //I instantiated the ConnectionToDatabase so we could use it again in our database transactions.
     ConnectionToDatabase connect = new ConnectionToDatabase();
     
@@ -38,6 +50,7 @@ public class UserForm extends javax.swing.JInternalFrame {
         dateOfBirthDateChooser.setDate(null);
         RegistrantTypeComboBox.setSelectedIndex(0);
         imagePathTextField.setText(null);
+        imageLabel.setIcon(null);
     }
 
     //Method to display data in the table
@@ -52,7 +65,7 @@ public class UserForm extends javax.swing.JInternalFrame {
             connect.s = connect.con.createStatement();
             connect.rs = connect.s.executeQuery(selectQuerry);
                         
-            DefaultTableModel model = (DefaultTableModel) userTable.getModel();
+            model = (DefaultTableModel) userTable.getModel();
             model.setRowCount(0);
             
             while (connect.rs.next()) {
@@ -393,10 +406,6 @@ public class UserForm extends javax.swing.JInternalFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    //Variables to be used when dealing with selection of the image.
-    String thePathOfTheImage;
-    File theimage, selectedImage;    
     
     //What happens when we click on browse image.
     private void BrowseImageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BrowseImageButtonActionPerformed
@@ -404,14 +413,25 @@ public class UserForm extends javax.swing.JInternalFrame {
         imageChooser.showOpenDialog(null);
         selectedImage = imageChooser.getSelectedFile();
         thePathOfTheImage = selectedImage.getAbsolutePath();
+        //long sizeOfImage = selectedImage.getTotalSpace();
+        //System.out.println(sizeOfImage);
         imagePathTextField.setText(thePathOfTheImage);
         theimage = new File(thePathOfTheImage);
         
-        displayImage();
+        displaySelectedImage(thePathOfTheImage);
     }//GEN-LAST:event_BrowseImageButtonActionPerformed
     
+    //Method to display the chosen Image
+    public void displaySelectedImage(String thePathOfTheImage1){
+        ImageIcon image = new ImageIcon(thePathOfTheImage1);
+        Image im = image.getImage();
+        Image myImg = im.getScaledInstance(imageLabel.getWidth(), imageLabel.getHeight(), Image.SCALE_SMOOTH);
+        ImageIcon newImage = new ImageIcon(myImg);
+        imageLabel.setIcon(newImage);
+    }
+    
     //Method to display images.
-    public void displayImage(){
+    public void displayImage(byte[] ImagePhotoFileFromDatabase1){
         ImageIcon image = new ImageIcon(ImagePhotoFileFromDatabase);
         Image im = image.getImage();
         Image myImg = im.getScaledInstance(imageLabel.getWidth(), imageLabel.getHeight(), Image.SCALE_SMOOTH);
@@ -449,16 +469,80 @@ public class UserForm extends javax.swing.JInternalFrame {
         
         displayInTable();
         
-        JOptionPane.showMessageDialog(this, "Bingo Saved Successfully!", "Saved", JOptionPane.INFORMATION_MESSAGE);
-        
         resetFields();
     }//GEN-LAST:event_saveButtonActionPerformed
 
     //What happens when we click on the update button.
     private void UpdateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_UpdateButtonActionPerformed
-       
         
-        resetFields();
+        //Selecting row
+        model = (DefaultTableModel) userTable.getModel();
+        int selectedRow = userTable.getSelectedRow();
+        String SelectedPhoneNumber = model.getValueAt(selectedRow, 2).toString();
+            
+        //Getting updated data from fields
+        String firstName = fnameTxtField.getText();
+        String lastName = lastNameTextField.getText();
+        String phoneNumber = PhoneNumberTextField.getText();
+            
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String theDate = dateFormat.format(dateOfBirthDateChooser.getDate());
+            
+        String registrantType = null;
+        if(RegistrantTypeComboBox.getSelectedItem().toString().equalsIgnoreCase("Student"))
+            registrantType = RegistrantType.Student.toString();
+        if(RegistrantTypeComboBox.getSelectedItem().toString().equalsIgnoreCase("Staff"))
+            registrantType = RegistrantType.Staff.toString();
+        if(RegistrantTypeComboBox.getSelectedItem().toString().equalsIgnoreCase("Stakeholder"))
+            registrantType = RegistrantType.Stakeholder.toString();
+            
+        //Saving data in the POJO Class variables
+        Users users = new Users(firstName, lastName, phoneNumber, theDate, registrantType, theimage);
+            
+        //Transforming the image into something that can be saved in the database.
+        if(imagePathTextField.getText().equals(model.getValueAt(selectedRow, 5).toString())){
+            person_image = imagePathTextField.getText().getBytes();
+        }else {
+            try {
+                try {
+                    fileinputstream = new FileInputStream(users.getImage());
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(UserForm.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                byte[] buf = new byte[2048];
+                try {
+                    for (int readNum; (readNum = fileinputstream.read(buf))!=-1;){
+                        bos.write(buf,0,readNum);
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(UserForm.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                person_image = bos.toByteArray();
+                    
+                //Pushing data to database using the UPDATE QUERRY
+                connect.getConnection();
+                String updateQuerry = "UPDATE schoolUsers SET firstName=?, lastName=?, phoneNumber=?, dateOfBirth=?, registrantType=?, image=? WHERE phoneNumber=?";
+                connect.ps = connect.con.prepareStatement(updateQuerry);
+                connect.ps.setString(1, firstName);
+                connect.ps.setString(2, lastName);
+                connect.ps.setString(3, phoneNumber);
+                connect.ps.setString(4, theDate);
+                connect.ps.setString(5, registrantType);
+                connect.ps.setBytes(6, person_image);
+                connect.ps.setString(7, SelectedPhoneNumber);
+                connect.ps.executeUpdate();
+                    
+                displayInTable();
+                JOptionPane.showMessageDialog(this, "Bingo Updated Successfully!", "Updated", JOptionPane.INFORMATION_MESSAGE);
+                resetFields();
+                    
+            } catch (SQLException ex) {
+                Logger.getLogger(UserForm.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                connect.getDisconnection();
+            }
+        }
     }//GEN-LAST:event_UpdateButtonActionPerformed
 
     //When we choose reset button.
@@ -478,11 +562,10 @@ public class UserForm extends javax.swing.JInternalFrame {
         
     }//GEN-LAST:event_importExcelButtonActionPerformed
 
-    byte[] ImagePhotoFileFromDatabase;
     //What happens when we click on a table row
     private void userTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_userTableMouseClicked
         try {
-            DefaultTableModel model = (DefaultTableModel) userTable.getModel();
+            model = (DefaultTableModel) userTable.getModel();
             int selectedRow = userTable.getSelectedRow();
             
             fnameTxtField.setText(model.getValueAt(selectedRow, 0).toString());
@@ -490,17 +573,12 @@ public class UserForm extends javax.swing.JInternalFrame {
             PhoneNumberTextField.setText(model.getValueAt(selectedRow, 2).toString());
             java.util.Date date = new SimpleDateFormat("yyyy-MM-dd").parse((String)model.getValueAt(selectedRow, 3).toString());
             dateOfBirthDateChooser.setDate(date);
-            //if()
-                RegistrantTypeComboBox.setSelectedItem(model.getValueAt(selectedRow, 4).toString());            
-            //else if()
-            //    RegistrantTypeComboBox.setSelectedItem(model.getValueAt(selectedRow, 4).toString());
-            //else if()
-            //    RegistrantTypeComboBox.setSelectedItem(model.getValueAt(selectedRow, 4).toString());    
+            RegistrantTypeComboBox.setSelectedItem(model.getValueAt(selectedRow, 4).toString());            
             imagePathTextField.setText(model.getValueAt(selectedRow, 5).toString());
             
             ImagePhotoFileFromDatabase = (byte[]) model.getValueAt(selectedRow, 5);
             
-            displayImage();
+            displayImage(ImagePhotoFileFromDatabase);
             
         } catch (ParseException ex) {
             Logger.getLogger(UserForm.class.getName()).log(Level.SEVERE, null, ex);
