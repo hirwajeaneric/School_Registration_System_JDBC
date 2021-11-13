@@ -2,13 +2,11 @@
 This is a School Registration System created using JDBC (Java Database Connectivity)
 
 ## Components
-- - - -
 This project contains all the necessary components that describe how how manipulate data using JDBC.
 This project performs CRUD: CREATE, RETRIEVE, UPDATE, and DELETE.
 This project and it's following versions will also include the functionalities like Batch Processing.
 
 ## Objectives
-- - - - 
 * Learn how to save and return back Data entered from 
   * text fields
   * Combo boxes
