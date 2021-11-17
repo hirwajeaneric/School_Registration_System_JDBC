@@ -27,6 +27,8 @@ import utils.ConnectionToDatabase;
 public class UserForm extends javax.swing.JInternalFrame {
 
     //Variables to be used when dealing with selection of the image.
+    int selectedRow;
+    public String selectedPhoneNumber;
     byte[] person_image;
     FileInputStream fileinputstream;
     String thePathOfTheImage;
@@ -55,7 +57,6 @@ public class UserForm extends javax.swing.JInternalFrame {
 
     //Method to display data in the table
     private void displayInTable(){
-        int i,q;
         try {
             connect.getConnection();
             
@@ -80,7 +81,9 @@ public class UserForm extends javax.swing.JInternalFrame {
             }
         } catch (SQLException ex) {
             Logger.getLogger(UserForm.class.getName()).log(Level.SEVERE, null, ex);
-        } connect.getDisconnection();
+        } finally {
+            connect.getDisconnection();
+        }
     }
     
     
@@ -474,13 +477,7 @@ public class UserForm extends javax.swing.JInternalFrame {
 
     //What happens when we click on the update button.
     private void UpdateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_UpdateButtonActionPerformed
-        
-        //Selecting row
-        model = (DefaultTableModel) userTable.getModel();
-        int selectedRow = userTable.getSelectedRow();
-        String SelectedPhoneNumber = model.getValueAt(selectedRow, 2).toString();
-            
-        //Getting updated data from fields
+     
         String firstName = fnameTxtField.getText();
         String lastName = lastNameTextField.getText();
         String phoneNumber = PhoneNumberTextField.getText();
@@ -495,7 +492,9 @@ public class UserForm extends javax.swing.JInternalFrame {
             registrantType = RegistrantType.Staff.toString();
         if(RegistrantTypeComboBox.getSelectedItem().toString().equalsIgnoreCase("Stakeholder"))
             registrantType = RegistrantType.Stakeholder.toString();
-            
+        
+        //Code for bringing the image back
+        
         //Saving data in the POJO Class variables
         Users users = new Users(firstName, lastName, phoneNumber, theDate, registrantType, theimage);
             
@@ -503,45 +502,13 @@ public class UserForm extends javax.swing.JInternalFrame {
         if(imagePathTextField.getText().equals(model.getValueAt(selectedRow, 5).toString())){
             person_image = imagePathTextField.getText().getBytes();
         }else {
-            try {
-                try {
-                    fileinputstream = new FileInputStream(users.getImage());
-                } catch (FileNotFoundException ex) {
-                    Logger.getLogger(UserForm.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                byte[] buf = new byte[2048];
-                try {
-                    for (int readNum; (readNum = fileinputstream.read(buf))!=-1;){
-                        bos.write(buf,0,readNum);
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(UserForm.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                person_image = bos.toByteArray();
-                    
-                //Pushing data to database using the UPDATE QUERRY
-                connect.getConnection();
-                String updateQuerry = "UPDATE schoolUsers SET firstName=?, lastName=?, phoneNumber=?, dateOfBirth=?, registrantType=?, image=? WHERE phoneNumber=?";
-                connect.ps = connect.con.prepareStatement(updateQuerry);
-                connect.ps.setString(1, firstName);
-                connect.ps.setString(2, lastName);
-                connect.ps.setString(3, phoneNumber);
-                connect.ps.setString(4, theDate);
-                connect.ps.setString(5, registrantType);
-                connect.ps.setBytes(6, person_image);
-                connect.ps.setString(7, SelectedPhoneNumber);
-                connect.ps.executeUpdate();
-                    
-                displayInTable();
-                JOptionPane.showMessageDialog(this, "Bingo Updated Successfully!", "Updated", JOptionPane.INFORMATION_MESSAGE);
-                resetFields();
-                    
-            } catch (SQLException ex) {
-                Logger.getLogger(UserForm.class.getName()).log(Level.SEVERE, null, ex);
-            } finally {
-                connect.getDisconnection();
-            }
+            UserDao userdao = new UserDao();
+            userdao.update(users);
+            
+            displayInTable();
+            JOptionPane.showMessageDialog(this, "Bingo Updated Successfully!", "Updated", JOptionPane.INFORMATION_MESSAGE);
+            resetFields();
+            connect.getDisconnection();
         }
     }//GEN-LAST:event_UpdateButtonActionPerformed
 
@@ -561,12 +528,13 @@ public class UserForm extends javax.swing.JInternalFrame {
     private void importExcelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_importExcelButtonActionPerformed
         
     }//GEN-LAST:event_importExcelButtonActionPerformed
-
+    
     //What happens when we click on a table row
     private void userTableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_userTableMouseClicked
         try {
             model = (DefaultTableModel) userTable.getModel();
             int selectedRow = userTable.getSelectedRow();
+            selectedPhoneNumber = model.getValueAt(selectedRow, 2).toString();
             
             fnameTxtField.setText(model.getValueAt(selectedRow, 0).toString());
             lastNameTextField.setText(model.getValueAt(selectedRow, 1).toString());
