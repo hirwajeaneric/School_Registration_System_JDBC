@@ -18,17 +18,19 @@ public class Users {
     private String dateOfBirth;
     private String registrantType;
     private File image;
+    private String selectedValue;
 
     public Users() {
     }
 
-    public Users(String firstName, String lastName, String phoneNumber, String dateOfBirth, String registrantType, File image) {
+    public Users(String firstName, String lastName, String phoneNumber, String dateOfBirth, String registrantType, File image, String selectedValue) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
         this.dateOfBirth = dateOfBirth;
         this.registrantType = registrantType;
         this.image = image;
+        this.selectedValue = selectedValue;
     }
 
     public String getFirstName() {
@@ -77,6 +79,14 @@ public class Users {
 
     public void setImage(File image) {
         this.image = image;
+    }
+
+    public String getSelectedValue() {
+        return selectedValue;
+    }
+
+    public void setSelectedValue(String selectedValue) {
+        this.selectedValue = selectedValue;
     }
     
     

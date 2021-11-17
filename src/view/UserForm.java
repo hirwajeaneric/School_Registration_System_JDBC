@@ -2,7 +2,6 @@ package view;
 
 import controller.UserDao;
 import java.awt.Image;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -28,7 +27,6 @@ public class UserForm extends javax.swing.JInternalFrame {
 
     //Variables to be used when dealing with selection of the image.
     int selectedRow;
-    public String selectedPhoneNumber;
     byte[] person_image;
     FileInputStream fileinputstream;
     String thePathOfTheImage;
@@ -416,8 +414,6 @@ public class UserForm extends javax.swing.JInternalFrame {
         imageChooser.showOpenDialog(null);
         selectedImage = imageChooser.getSelectedFile();
         thePathOfTheImage = selectedImage.getAbsolutePath();
-        //long sizeOfImage = selectedImage.getTotalSpace();
-        //System.out.println(sizeOfImage);
         imagePathTextField.setText(thePathOfTheImage);
         theimage = new File(thePathOfTheImage);
         
@@ -465,7 +461,13 @@ public class UserForm extends javax.swing.JInternalFrame {
         //This is because we have already recieved it using the Image Browser Button.
         
         //Step 2: Saving these user details in the POJO or Model Class.
-        Users users = new Users(firstName, lastName, phoneNumber, theDate, registrantType, theimage);
+        Users users = new Users();
+        users.setFirstName(firstName);
+        users.setLastName(lastName);
+        users.setPhoneNumber(phoneNumber);
+        users.setDateOfBirth(theDate);
+        users.setRegistrantType(registrantType);
+        users.setImage(theimage);
         
         UserDao userDao = new UserDao();
         userDao.save(users);
@@ -481,10 +483,8 @@ public class UserForm extends javax.swing.JInternalFrame {
         String firstName = fnameTxtField.getText();
         String lastName = lastNameTextField.getText();
         String phoneNumber = PhoneNumberTextField.getText();
-            
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String theDate = dateFormat.format(dateOfBirthDateChooser.getDate());
-            
         String registrantType = null;
         if(RegistrantTypeComboBox.getSelectedItem().toString().equalsIgnoreCase("Student"))
             registrantType = RegistrantType.Student.toString();
@@ -496,20 +496,22 @@ public class UserForm extends javax.swing.JInternalFrame {
         //Code for bringing the image back
         
         //Saving data in the POJO Class variables
-        Users users = new Users(firstName, lastName, phoneNumber, theDate, registrantType, theimage);
-            
+        Users users = new Users();
+        users.setFirstName(firstName);
+        users.setLastName(lastName);
+        users.setPhoneNumber(phoneNumber);
+        users.setDateOfBirth(theDate);
+        users.setRegistrantType(registrantType);
+        users.setImage(theimage);
+        
         //Transforming the image into something that can be saved in the database.
-        if(imagePathTextField.getText().equals(model.getValueAt(selectedRow, 5).toString())){
-            person_image = imagePathTextField.getText().getBytes();
-        }else {
-            UserDao userdao = new UserDao();
-            userdao.update(users);
+        UserDao userdao = new UserDao();
+        userdao.update(users);
             
-            displayInTable();
-            JOptionPane.showMessageDialog(this, "Bingo Updated Successfully!", "Updated", JOptionPane.INFORMATION_MESSAGE);
-            resetFields();
-            connect.getDisconnection();
-        }
+        displayInTable();
+        JOptionPane.showMessageDialog(this, "Bingo Updated Successfully!", "Updated", JOptionPane.INFORMATION_MESSAGE);
+        resetFields();
+        connect.getDisconnection();
     }//GEN-LAST:event_UpdateButtonActionPerformed
 
     //When we choose reset button.
@@ -534,7 +536,10 @@ public class UserForm extends javax.swing.JInternalFrame {
         try {
             model = (DefaultTableModel) userTable.getModel();
             int selectedRow = userTable.getSelectedRow();
-            selectedPhoneNumber = model.getValueAt(selectedRow, 2).toString();
+            String selectedPhoneNumber = model.getValueAt(selectedRow, 2).toString();
+
+            Users users = new Users();
+            users.setSelectedValue(selectedPhoneNumber);
             
             fnameTxtField.setText(model.getValueAt(selectedRow, 0).toString());
             lastNameTextField.setText(model.getValueAt(selectedRow, 1).toString());

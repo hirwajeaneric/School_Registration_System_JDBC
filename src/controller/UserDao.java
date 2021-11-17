@@ -69,7 +69,7 @@ public class UserDao extends ConnectionToDatabase {
             getDisconnection();
         }
     }
-    
+        
     public void update(Users users){
         try {
             getConnection();
@@ -105,9 +105,12 @@ public class UserDao extends ConnectionToDatabase {
             ps.setString(4, users.getDateOfBirth());
             ps.setString(5, users.getRegistrantType());
             ps.setBytes(6, person_image);
-            UserForm userform = new UserForm();
-            String SelectedPhone = userform.selectedPhoneNumber;
-            ps.setString(7, SelectedPhone);
+            
+            System.out.println(users.getSelectedValue());
+            System.out.println(users.getDateOfBirth());
+            System.out.println(users.getFirstName());
+            
+            ps.setString(7, users.getSelectedValue());
             
             ps.executeUpdate();
             
