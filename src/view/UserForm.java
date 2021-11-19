@@ -89,7 +89,35 @@ public class UserForm extends javax.swing.JInternalFrame {
         }
     }
     
-    private void updateData(Users users){
+    //This method will update data if we did not change the image.
+    private void updateData2 (Users users) {
+        try {
+            connect.getConnection();
+     
+            //Sending data into the database using the querry.
+            
+            String updateQuerry = "UPDATE schoolUsers SET firstName=?, lastName=?, phoneNumber=?, dateOfBirth=?, registrantType=? WHERE phoneNumber=?";
+            
+            connect.ps = connect.con.prepareStatement(updateQuerry);
+            
+            connect.ps.setString(1, users.getFirstName());
+            connect.ps.setString(2, users.getLastName());
+            connect.ps.setString(3, users.getPhoneNumber());
+            connect.ps.setString(4, users.getDateOfBirth());
+            connect.ps.setString(5, users.getRegistrantType());
+            connect.ps.setString(6, selectedPhoneNumber);
+            
+            connect.ps.executeUpdate();
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(UserDao.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            connect.getDisconnection();
+        }
+    }
+    
+    //This method will update all data including the image if we changed it.
+    private void updateData1(Users users){
         try {
             connect.getConnection();
      
@@ -125,8 +153,6 @@ public class UserForm extends javax.swing.JInternalFrame {
             connect.ps.setString(5, users.getRegistrantType());
             connect.ps.setBytes(6, person_image);            
             connect.ps.setString(7, selectedPhoneNumber);
-            
-            System.out.println(selectedPhoneNumber);
             
             connect.ps.executeUpdate();
             
@@ -555,7 +581,11 @@ public class UserForm extends javax.swing.JInternalFrame {
         users.setImage(theimage);
         
         //This is the update method I have created above.
-        updateData(users);
+        if(theimage != null){
+            updateData1(users);
+        } else {
+            updateData2(users);
+        }
         
         //UserDao userdao = new UserDao();
         //userdao.update(users);
