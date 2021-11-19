@@ -14,3 +14,4 @@ This project and it's following versions will also include the functionalities l
 * Learn how to save images and retrieve them from the database
 * Learn how to display data from database to a JTable
 * Learn how to use Java Enums to enumerate data like Gender,...
+* Learn how to save numerous data at a time.
