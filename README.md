@@ -1,5 +1,7 @@
-# School_Registration_System_JDBC_v1
+# School_Registration_System_JDBC
 This is a School Registration System created using JDBC (Java Database Connectivity)
+
+![Project view](https://github.com/hirwajeaneric/School_Registration_System_JDBC_v1/blob/main/doc/SMS-JDBC-Screenshot.png)
 
 ## Components
 This project contains all the necessary components that describe how how manipulate data using JDBC.
