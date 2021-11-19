@@ -69,7 +69,9 @@ public class UserDao extends ConnectionToDatabase {
             getDisconnection();
         }
     }
-        
+    
+    /*This update method is not working. However, it can if well elaborated.
+    It is very similar to the one in the UserForm class in View package.*/
     public void update(Users users){
         try {
             getConnection();
@@ -77,6 +79,9 @@ public class UserDao extends ConnectionToDatabase {
             //The next lines are where we are going to recieve the image file 
             //choosen from the form and convert it into bytes that can be sent 
             //and successfuly be saved in the database.
+            //if(){
+            //    
+            //}
             try {
                 fileinputstream = new FileInputStream(users.getImage());
             } catch (FileNotFoundException ex) {
@@ -107,8 +112,6 @@ public class UserDao extends ConnectionToDatabase {
             ps.setBytes(6, person_image);
             
             System.out.println(users.getSelectedValue());
-            System.out.println(users.getDateOfBirth());
-            System.out.println(users.getFirstName());
             
             ps.setString(7, users.getSelectedValue());
             
@@ -119,5 +122,23 @@ public class UserDao extends ConnectionToDatabase {
         } finally {
             getDisconnection();
         }
+    }
+    
+    public void delete(Users users){
+        try {
+            getConnection();
+            String deleteQuerry = "DELETE FROM schoolUsers WHERE phoneNumber=?";
+            
+            ps = con.prepareStatement(deleteQuerry);
+            
+            ps.setString(1,users.getSelectedValue());
+            ps.executeUpdate();
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(UserDao.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            getDisconnection();
+        }
+        
     }
 }
