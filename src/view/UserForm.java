@@ -26,15 +26,18 @@ import utils.ConnectionToDatabase;
  */
 public class UserForm extends javax.swing.JInternalFrame {
 
+    //THIS SECTION CONTAINS GLOBAL VARIABLES. 
     //Variables to be used when dealing with selection of the image.
     int selectedRow;
-    public String selectedPhoneNumber;
     byte[] person_image;
     FileInputStream fileinputstream;
     String thePathOfTheImage;
     File theimage, selectedImage;    
     byte[] ImagePhotoFileFromDatabase;
+    
+    //Other variables.
     DefaultTableModel model;
+    String selectedPhoneNumber;
 
     //I instantiated the ConnectionToDatabase so we could use it again in our database transactions.
     ConnectionToDatabase connect = new ConnectionToDatabase();
@@ -86,6 +89,79 @@ public class UserForm extends javax.swing.JInternalFrame {
         }
     }
     
+    //This method will update data if we did not change the image.
+    private void updateData2 (Users users) {
+        try {
+            connect.getConnection();
+     
+            //Sending data into the database using the querry.
+            
+            String updateQuerry = "UPDATE schoolUsers SET firstName=?, lastName=?, phoneNumber=?, dateOfBirth=?, registrantType=? WHERE phoneNumber=?";
+            
+            connect.ps = connect.con.prepareStatement(updateQuerry);
+            
+            connect.ps.setString(1, users.getFirstName());
+            connect.ps.setString(2, users.getLastName());
+            connect.ps.setString(3, users.getPhoneNumber());
+            connect.ps.setString(4, users.getDateOfBirth());
+            connect.ps.setString(5, users.getRegistrantType());
+            connect.ps.setString(6, selectedPhoneNumber);
+            
+            connect.ps.executeUpdate();
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(UserDao.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            connect.getDisconnection();
+        }
+    }
+    
+    //This method will update all data including the image if we changed it.
+    private void updateData1(Users users){
+        try {
+            connect.getConnection();
+     
+            //The next lines are where we are going to recieve the image file 
+            //choosen from the form and convert it into bytes that can be sent 
+            //and successfuly be saved in the database.
+            try {
+                fileinputstream = new FileInputStream(users.getImage());
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(UserDao.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] buf = new byte[2048];
+            try {
+                for(int readNum; (readNum = fileinputstream.read(buf))!=-1;){
+                    bos.write(buf,0,readNum);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(UserDao.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            person_image = bos.toByteArray();
+            
+            //Sending data into the database using the querry.
+            
+            String updateQuerry = "UPDATE schoolUsers SET firstName=?, lastName=?, phoneNumber=?, dateOfBirth=?, registrantType=?, image=? WHERE phoneNumber=?";
+            
+            connect.ps = connect.con.prepareStatement(updateQuerry);
+            
+            connect.ps.setString(1, users.getFirstName());
+            connect.ps.setString(2, users.getLastName());
+            connect.ps.setString(3, users.getPhoneNumber());
+            connect.ps.setString(4, users.getDateOfBirth());
+            connect.ps.setString(5, users.getRegistrantType());
+            connect.ps.setBytes(6, person_image);            
+            connect.ps.setString(7, selectedPhoneNumber);
+            
+            connect.ps.executeUpdate();
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(UserDao.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            connect.getDisconnection();
+        }
+    }
     
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -416,8 +492,6 @@ public class UserForm extends javax.swing.JInternalFrame {
         imageChooser.showOpenDialog(null);
         selectedImage = imageChooser.getSelectedFile();
         thePathOfTheImage = selectedImage.getAbsolutePath();
-        //long sizeOfImage = selectedImage.getTotalSpace();
-        //System.out.println(sizeOfImage);
         imagePathTextField.setText(thePathOfTheImage);
         theimage = new File(thePathOfTheImage);
         
@@ -465,7 +539,13 @@ public class UserForm extends javax.swing.JInternalFrame {
         //This is because we have already recieved it using the Image Browser Button.
         
         //Step 2: Saving these user details in the POJO or Model Class.
-        Users users = new Users(firstName, lastName, phoneNumber, theDate, registrantType, theimage);
+        Users users = new Users();
+        users.setFirstName(firstName);
+        users.setLastName(lastName);
+        users.setPhoneNumber(phoneNumber);
+        users.setDateOfBirth(theDate);
+        users.setRegistrantType(registrantType);
+        users.setImage(theimage);
         
         UserDao userDao = new UserDao();
         userDao.save(users);
@@ -481,10 +561,8 @@ public class UserForm extends javax.swing.JInternalFrame {
         String firstName = fnameTxtField.getText();
         String lastName = lastNameTextField.getText();
         String phoneNumber = PhoneNumberTextField.getText();
-            
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String theDate = dateFormat.format(dateOfBirthDateChooser.getDate());
-            
         String registrantType = null;
         if(RegistrantTypeComboBox.getSelectedItem().toString().equalsIgnoreCase("Student"))
             registrantType = RegistrantType.Student.toString();
@@ -493,23 +571,29 @@ public class UserForm extends javax.swing.JInternalFrame {
         if(RegistrantTypeComboBox.getSelectedItem().toString().equalsIgnoreCase("Stakeholder"))
             registrantType = RegistrantType.Stakeholder.toString();
         
-        //Code for bringing the image back
-        
         //Saving data in the POJO Class variables
-        Users users = new Users(firstName, lastName, phoneNumber, theDate, registrantType, theimage);
-            
-        //Transforming the image into something that can be saved in the database.
-        if(imagePathTextField.getText().equals(model.getValueAt(selectedRow, 5).toString())){
-            person_image = imagePathTextField.getText().getBytes();
-        }else {
-            UserDao userdao = new UserDao();
-            userdao.update(users);
-            
-            displayInTable();
-            JOptionPane.showMessageDialog(this, "Bingo Updated Successfully!", "Updated", JOptionPane.INFORMATION_MESSAGE);
-            resetFields();
-            connect.getDisconnection();
+        Users users = new Users();
+        users.setFirstName(firstName);
+        users.setLastName(lastName);
+        users.setPhoneNumber(phoneNumber);
+        users.setDateOfBirth(theDate);
+        users.setRegistrantType(registrantType);
+        users.setImage(theimage);
+        
+        //This is the update method I have created above.
+        if(theimage != null){
+            updateData1(users);
+        } else {
+            updateData2(users);
         }
+        
+        //UserDao userdao = new UserDao();
+        //userdao.update(users);
+        
+        displayInTable();
+        JOptionPane.showMessageDialog(this, "Bingo Updated Successfully!", "Updated", JOptionPane.INFORMATION_MESSAGE);
+        resetFields();
+        connect.getDisconnection();
     }//GEN-LAST:event_UpdateButtonActionPerformed
 
     //When we choose reset button.
@@ -519,9 +603,14 @@ public class UserForm extends javax.swing.JInternalFrame {
 
     //When we click on delete button.
     private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
+        Users users = new Users();
+        users.setSelectedValue(selectedPhoneNumber);
         
+        UserDao userdao = new UserDao();
+        userdao.delete(users);
         
         resetFields();
+        displayInTable();
     }//GEN-LAST:event_deleteButtonActionPerformed
 
     //When we click on Import excel button.
@@ -535,6 +624,9 @@ public class UserForm extends javax.swing.JInternalFrame {
             model = (DefaultTableModel) userTable.getModel();
             int selectedRow = userTable.getSelectedRow();
             selectedPhoneNumber = model.getValueAt(selectedRow, 2).toString();
+
+            Users users = new Users();
+            users.setSelectedValue(selectedPhoneNumber);
             
             fnameTxtField.setText(model.getValueAt(selectedRow, 0).toString());
             lastNameTextField.setText(model.getValueAt(selectedRow, 1).toString());
